@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: light dark; --fg: #1d1d1f; --muted: #6e6e73; --line: rgba(0,0,0,.1); --err: #d70015; --ok: #248a3d; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #f5f5f7; --muted: #98989d; --line: rgba(255,255,255,.12); --err: #ff6961; --ok: #30d158; } }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: transparent; color: var(--fg); font: 13px -apple-system, system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; padding: 10px 14px 12px; gap: 8px; }
+  .bar { display: flex; gap: 6px; align-items: center; }
+  button { font: inherit; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: rgba(127,127,127,.12); color: var(--fg); cursor: pointer; }
+  button:hover { background: rgba(127,127,127,.22); }
+  #status { margin-left: auto; color: var(--muted); }
+  #status.err { color: var(--err); } #status.ok { color: var(--ok); }
+  textarea { flex: 1; width: 100%; resize: none; border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+    background: rgba(127,127,127,.06); color: var(--fg); font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; outline: none; }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <button id="fmt">格式化</button>
+    <button id="min">压缩</button>
+    <button id="paste">粘贴剪贴板</button>
+    <button id="copy">复制结果</button>
+    <span id="status"></span>
+  </div>
+  <textarea id="src" spellcheck="false" placeholder="粘贴 JSON…"></textarea>
+<script>
+  // view 插件：运行在 WKWebView 中，通过全局 ot 对象调用原生能力
+  const src = document.getElementById('src');
+  const status = document.getElementById('status');
+  const say = (t, cls = '') => { status.textContent = t; status.className = cls; };
+
+  function run(indent) {
+    const text = src.value.trim();
+    if (!text) return say('');
+    try {
+      src.value = JSON.stringify(JSON.parse(text), null, indent);
+      say(indent ? '✓ 合法 JSON' : '✓ 已压缩', 'ok');
+    } catch (e) {
+      say(e.message, 'err');
+    }
+  }
+
+  document.getElementById('fmt').onclick = () => run(2);
+  document.getElementById('min').onclick = () => run(0);
+  document.getElementById('paste').onclick = async () => { src.value = (await ot.clipboard.readText()) || ''; run(2); };
+  document.getElementById('copy').onclick = async () => { await ot.clipboard.writeText(src.value); ot.toast('已复制'); };
+
+  ot.onEnter(async ({ query }) => {
+    src.value = query || (await ot.clipboard.readText()) || '';
+    run(2);
+  });
+  ot.onInput(({ text }) => { src.value = text; run(2); });
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "id": "dev.opentools.timestamp",
+  "name": "时间戳转换",
+  "version": "1.0.1",
+  "description": "Unix 时间戳与日期互转。直接在搜索框输入 10/13 位数字或日期即可识别。",
+  "author": "OpenTools",
+  "icon": "sf:clock",
+  "main": "main.js",
+  "commands": [
+    {
+      "id": "convert",
+      "title": "时间戳转换",
+      "subtitle": "时间戳 ↔ 日期",
+      "mode": "list",
+      "keywords": ["timestamp", "ts", "unix", "date"],
+      "placeholder": "输入时间戳或日期，留空显示当前时间",
+      "triggers": [
+        { "type": "regex", "pattern": "^\\d{10}(\\d{3})?$", "title": "时间戳转日期" },
+        { "type": "regex", "pattern": "^\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}([ T]\\d{1,2}:\\d{1,2}(:\\d{1,2})?)?$", "title": "日期转时间戳" }
+      ]
+    }
+  ]
+}

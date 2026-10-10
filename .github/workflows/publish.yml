@@ -1,0 +1,64 @@
+name: 发布插件源
+
+# main 有变化就重新构建、签名，并发布到 registry 分支；OpenTools 通过 jsDelivr / GitHub 读取该分支
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: 获取 otpack 源码
+        uses: actions/checkout@v4
+        with:
+          repository: no1coder/opentools
+          path: .opentools
+      - name: 构建 otpack
+        run: swift build -c release --product otpack --package-path .opentools
+
+      - name: 写入签名密钥
+        env:
+          REGISTRY_KEY: ${{ secrets.OPENTOOLS_REGISTRY_KEY }}
+        run: |
+          if [ -z "$REGISTRY_KEY" ]; then
+            echo "::error::缺少 secret OPENTOOLS_REGISTRY_KEY（维护者用 otpack keygen 生成的密钥文件内容）。未签名的插件源会被 OpenTools 拒绝，已停止发布。"
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$REGISTRY_KEY" > "$RUNNER_TEMP/registry-key.json"
+
+      - name: 检查、打包并签名
+        run: OTPACK=.opentools/.build/release/otpack scripts/build-registry.sh --key "$RUNNER_TEMP/registry-key.json"
+
+      - name: 删除密钥
+        if: always()
+        run: rm -f "$RUNNER_TEMP/registry-key.json"
+
+      - name: 发布到 registry 分支
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init -q -b registry
+          git add -A
+          git -c user.name="opentools-bot" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "发布插件源（来自 ${GITHUB_SHA::7}）"
+          # registry 分支只保留最新一次构建，安装包不会在 git 历史里越积越多
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" registry
+
+      - name: 刷新 jsDelivr 缓存
+        run: |
+          # 安装包文件名带版本号，只需要刷新索引与签名
+          for f in index.json index.json.sig; do
+            curl -fsS "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@registry/$f" > /dev/null || echo "::warning::刷新 $f 失败，最多 12 小时后自动生效"
+          done

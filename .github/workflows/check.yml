@@ -1,0 +1,24 @@
+name: 检查插件
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: 获取 otpack 源码
+        uses: actions/checkout@v4
+        with:
+          repository: no1coder/opentools
+          path: .opentools
+      - name: 构建 otpack
+        run: swift build -c release --product otpack --package-path .opentools
+      - name: 检查并打包全部插件（不签名）
+        run: OTPACK=.opentools/.build/release/otpack scripts/build-registry.sh
+      - name: 上传构建结果（供审核者下载试装）
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry
+          path: dist

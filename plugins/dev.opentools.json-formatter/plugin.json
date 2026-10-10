@@ -1,0 +1,23 @@
+{
+  "id": "dev.opentools.json-formatter",
+  "name": "JSON 格式化",
+  "version": "1.0.0",
+  "description": "格式化、压缩、校验 JSON。在搜索框粘贴 JSON 可直接唤起。",
+  "author": "OpenTools",
+  "icon": "sf:curlybraces",
+  "permissions": ["clipboard"],
+  "commands": [
+    {
+      "id": "format",
+      "title": "JSON 格式化",
+      "mode": "view",
+      "entry": "index.html",
+      "height": 460,
+      "keywords": ["json", "format", "格式化"],
+      "placeholder": "在此输入内容会实时同步到编辑区",
+      "triggers": [
+        { "type": "regex", "pattern": "^\\s*[\\[{]", "title": "格式化 JSON", "minLength": 2 }
+      ]
+    }
+  ]
+}

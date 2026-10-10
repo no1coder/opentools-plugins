@@ -1,0 +1,19 @@
+{
+  "id": "dev.opentools.github-search",
+  "name": "GitHub 仓库搜索",
+  "version": "1.0.0",
+  "description": "实时搜索 GitHub 仓库，回车在浏览器中打开。演示 network / open 权限。",
+  "author": "OpenTools",
+  "icon": "sf:shippingbox",
+  "main": "main.js",
+  "permissions": ["network", "open"],
+  "commands": [
+    {
+      "id": "search",
+      "title": "搜索 GitHub 仓库",
+      "mode": "list",
+      "keywords": ["github", "gh", "repo"],
+      "placeholder": "输入仓库关键字…"
+    }
+  ]
+}

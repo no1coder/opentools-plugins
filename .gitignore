@@ -1,0 +1,6 @@
+.DS_Store
+dist/
+.opentools/
+*signing-key*.json
+*registry-key*.json
+node_modules/
